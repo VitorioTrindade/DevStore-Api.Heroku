@@ -21,19 +21,16 @@ app.post ('/produto', async (req, resp) => {
     try {
         let { nome, precoDe, categoria, precoPor, avaliacao, estoque, link, descricao } = req.body;
 
-        let w = req.body;
-
         let v = await db.tb_produto.findOne({ where: { nm_produto: nome } })
-        let produto = await db.tb_produto.findOne({ where: { nm_produto: w.nome } });
 
         if (v != null)
-            return resp.send({ erro: 'Produto já existe!' });
+            return resp.send({ erro: 'Já existe um produto com esse nome' });
 
-        if (produto != null) 
-            return resp.send({ erro: 'Já existe um produto com esse nome' }); 
-
-        if ((precoDe && precoPor && avaliacao && estoque) === NaN)
+        if ((precoDe != Number(precoDe)) || (precoPor != Number(precoPor)) || (avaliacao != Number(avaliacao)) || (estoque != Number(estoque)))
              return resp.send({ erro: 'Os campos de preços, avaliação e estoque precisam ser preenchidos com números!' });
+
+        if ((precoDe || precoPor || avaliacao || estoque ) < 0)
+             return resp.send({ erro: 'Os campos de preços, avaliação e estoque precisam ser preenchidos com números positivos!' });
 
         if (nome === '' || nome.replace(/\n/g, '') == '')
              return resp.send({ erro: 'O nome do produto é obrigatório!' });
@@ -68,7 +65,8 @@ app.post ('/produto', async (req, resp) => {
             ds_produto: descricao,
             qtd_estoque: estoque,
             img_produto: link,
-            dt_inclusao: new Date() 
+            bt_ativo: true,
+            dt_inclusao: new Date()
         })
         resp.send(r);
     } catch (e) {
@@ -79,7 +77,34 @@ app.post ('/produto', async (req, resp) => {
 app.put ('/produto/:id', async (req, resp) => {
     try {
         let id = req.params.id;
-        let { nome, precoDe, categoria, precoPor, avaliacao, estoque, link, descricao } = req.body;      
+        let { nome, precoDe, categoria, precoPor, avaliacao, estoque, link, descricao } = req.body;   
+
+        if (nome === '' || nome.replace(/\n/g, '') == '')
+             return resp.send({ erro: 'O nome do produto é obrigatório!' });
+ 
+        if (precoDe === '')
+             return resp.send({ erro: 'O campo do preço de é obrigatório!' });
+
+        if (precoPor === '')
+             return resp.send({ erro: 'O campo do preço por é obrigatório!' });
+ 
+        if (categoria === '' || categoria.replace(/\n/g, '') == '')
+             return resp.send({ erro: 'O campo da categoria é obrigatório!' });
+
+        if (avaliacao === '' )
+             return resp.send({ erro: 'O campo da avaliação é obrigatório!' });
+ 
+        if (estoque === '' )
+             return resp.send({ erro: 'O campo do estoque é obrigatório!' });
+
+        if (descricao === '' || descricao.replace(/\n/g, '') == '')
+             return resp.send({ erro: 'A descrição do produto é obrigatória!' });
+ 
+        if (link === '' || link.replace(/\n/g, '') == '')
+             return resp.send({ erro: 'O link da imagem é obrigatório!' }); 
+
+        if ((precoDe != Number(precoDe)) || (precoPor != Number(precoPor)) || (avaliacao != Number(avaliacao)) || (estoque != Number(estoque)))
+             return resp.send({ erro: 'Os campos de preços, avaliação e estoque precisam ser preenchidos com números!' });  
 
         let r = await db.tb_produto.update(
             { 
